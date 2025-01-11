@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f3f3f3;
+    }
+
+    /* Chatbot Icon */
+    .chatbot-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #007bff;
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    /* Chat Window */
+    .chat-container {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 90%;
+      max-width: 400px;
+      height: 80%;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      background-color: #007bff;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      border-top: 1px solid #ccc;
+    }
+
+    .chat-box .question {
+      background-color: #e6f0ff;
+      color: #007bff;
+      padding: 12px 15px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      display: inline-block;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .chat-box .question:hover {
+      background-color: #d0e5ff;
+    }
+
+    .input-container {
+      padding: 15px;
+      border-top: 1px solid #ccc;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-container input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .input-container .error {
+      color: red;
+      font-size: 12px;
+    }
+
+    /* Close Button */
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chatbot-icon" onclick="toggleChat()">💬</div>
+
+<div class="chat-container">
+  <div class="chat-header">
+    Chatbot
+    <button class="close-btn" onclick="toggleChat()">✖</button>
+  </div>
+  <div class="chat-box" id="chat-box">
+    <div class="question" onclick="showSubQuestions(1)">
+      I need development services
+    </div>
+    <div class="question" onclick="showSubQuestions(2)">
+      I need to see portfolio
+    </div>
+    <div class="question" onclick="showSubQuestions(3)">
+      I need to book a free consultation
+    </div>
+    <div class="question" onclick="showSubQuestions(4)">
+      I need contact details
+    </div>
+  </div>
+  <div class="input-container" id="input-container" style="display: none;">
+    <label id="input-label"></label>
+    <input type="text" id="userInput" placeholder="Type your answer here..." />
+    <button class="btn" onclick="handleUserInput()">Submit</button>
+    <div class="error" id="error" style="display: none;">Invalid input. Please try again.</div>
+  </div>
+</div>
+
+<script>
+  let currentStep = 0;
+  let collectingEmail = false;
+  let collectingContact = false;
+  let userSelection = "";
+
+  function toggleChat() {
+    const chatContainer = document.querySelector('.chat-container');
+    chatContainer.style.display = chatContainer.style.display === 'none' || chatContainer.style.display === '' ? 'flex' : 'none';
+  }
+
+  function showSubQuestions(mainQuestion) {
+    const chatBox = document.querySelector('#chat-box');
+    chatBox.innerHTML = ''; // Clear existing questions
+    const subQuestions = {
+      1: [
+        "Mobile app development",
+        "Web app development",
+        "UI/UX Designing"
+      ],
+      2: [
+        "Project A - Web",
+        "Project B - Mobile",
+        "Project C - Design"
+      ],
+      3: [
+        "Book a 15-min call",
+        "Schedule a full consult",
+        "Discuss project requirements"
+      ],
+      4: [
+        "Contact via email",
+        "Call us",
+        "Visit our office"
+      ]
+    };
+
+    subQuestions[mainQuestion].forEach((sub, index) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.innerText = sub;
+      div.onclick = () => collectEmailAndContact(sub);
+      chatBox.appendChild(div);
+    });
+  }
+
+  function collectEmailAndContact(subQuestion) {
+    const chatBox = document.querySelector('#chat-box');
+    const inputContainer = document.querySelector('#input-container');
+
+    chatBox.innerHTML = `<p>You selected: <strong>${subQuestion}</strong></p>`;
+    userSelection = subQuestion;
+    inputContainer.style.display = 'block';
+    document.querySelector('#input-label').innerText = "Please enter your email:";
+    collectingEmail = true;
+  }
+
+  function handleUserInput() {
+    const input = document.querySelector('#userInput').value;
+    const error = document.querySelector('#error');
+
+    if (collectingEmail) {
+      if (validateEmail(input)) {
+        error.style.display = 'none';
+        collectingEmail = false;
+        collectingContact = true;
+        document.querySelector('#chat-box').innerHTML += `<p>Email: ${input}</p>`;
+        document.querySelector('#input-label').innerText = "Please enter your contact number:";
+        document.querySelector('#userInput').value = '';
+      } else {
+        error.style.display = 'block';
+        error.innerText = 'Please enter a valid email address.';
+      }
+    } else if (collectingContact) {
+      if (validateContact(input)) {
+        error.style.display = 'none';
+        collectingContact = false;
+        document.querySelector('#chat-box').innerHTML += `<p>Contact Number: ${input}</p><p>Thank you! We will get in touch with you soon.</p>`;
+
+        // Display PDF link based on user selection
+        let pdfLink = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"; // Dummy link
+        if (userSelection === "Mobile app development") {
+          pdfLink = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"; // Replace with actual link for mobile app
+        }
+        if (userSelection === "Web app development") {
+          pdfLink = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"; // Replace with actual link for web app
+        }
+        if (userSelection === "UI/UX Designing") {
+          pdfLink = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"; // Replace with actual link for UI/UX
+        }
+
+        document.querySelector('#chat-box').innerHTML += `<p>Download your portfolio: <a href="${pdfLink}" target="_blank">Click here</a></p>`;
+        document.querySelector('#input-container').style.display = 'none';
+      } else {
+        error.style.display = 'block';
+        error.innerText = 'Please enter a valid contact number.';
+      }
+    }
+  }
+
+  function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  function validateContact(contact) {
+    return /^[0-9]{10}$/.test(contact);
+  }
+</script>
+
+</body>
+</html>
